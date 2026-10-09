@@ -1,0 +1,52 @@
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 250px;
+  z-index: 1030;
+  overflow-y: auto;
+}
+
+.app-navbar {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  right: 0;
+  height: 64px;
+  z-index: 1020;
+}
+
+.app-content {
+  margin-left: 250px;
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
+}
+
+.notif-dropdown {
+  width: 340px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  border-left: 3px solid transparent;
+}
+.notif-item.warning {
+  border-left-color: #ffc107;
+}
+.notif-item.danger {
+  border-left-color: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .app-sidebar {
+    width: 220px;
+  }
+  .app-navbar {
+    left: 220px;
+  }
+  .app-content {
+    margin-left: 220px;
+  }
+}
