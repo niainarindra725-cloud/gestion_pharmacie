@@ -7,7 +7,12 @@ class LigneApproSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LigneAppro
-        fields = ["id", "approvisionnement", "produit", "produit_nom", "quantite_recue", "prix_achat"]
+        fields = ["id", 
+                  "approvisionnement", 
+                  "produit", 
+                  "produit_nom", 
+                  "quantite_recue", 
+                  "prix_achat"]
         read_only_fields = ["approvisionnement"]
 
     def validate_quantite_recue(self, value):

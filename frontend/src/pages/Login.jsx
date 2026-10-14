@@ -39,7 +39,7 @@ export default function Login() {
     <div className="auth-bg">
       <div className="auth-card">
         <div className="auth-icon-circle">
-          <i className="bi bi-capsule-pill"></i>
+          <i className="bi bi-heart-pulse"></i>
         </div>
 
         <h5 className="auth-title">Gestion Pharmacie</h5>

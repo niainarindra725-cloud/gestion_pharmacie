@@ -2,9 +2,6 @@ from django.db import transaction
 from rest_framework import serializers
 from .models import Panier, LignePanier, Facture, LigneFacture, Paiement
 
-
-# ---------- PANIER ----------
-
 class LignePanierSerializer(serializers.ModelSerializer):
     produit_nom = serializers.CharField(source="produit.nom", read_only=True)
 
@@ -27,7 +24,6 @@ class PanierSerializer(serializers.ModelSerializer):
     lignes = LignePanierSerializer(many=True, required=False)
     client_nom = serializers.CharField(source="client.nom", read_only=True)
     montant_total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
-
     class Meta:
         model = Panier
         fields = [
@@ -50,22 +46,28 @@ class PanierSerializer(serializers.ModelSerializer):
             LignePanier.objects.create(panier=panier, **ligne)
         return panier
 
-
-# ---------- FACTURE / PAIEMENT ----------
-
 class LigneFactureSerializer(serializers.ModelSerializer):
     produit_nom = serializers.CharField(source="produit.nom", read_only=True)
 
     class Meta:
         model = LigneFacture
-        fields = ["id", "facture", "produit", "produit_nom", "quantite", "sous_total"]
+        fields = ["id",
+                  "facture",
+                  "produit", 
+                  "produit_nom", 
+                  "quantite",
+                  "sous_total"]
         read_only_fields = ["facture"]
 
 
 class PaiementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Paiement
-        fields = ["id", "facture", "date_paiement", "montant", "mode_paiement"]
+        fields = ["id",
+                  "facture", 
+                  "date_paiement", 
+                  "montant", 
+                  "mode_paiement"]
         read_only_fields = ["date_paiement"]
 
 
@@ -74,21 +76,32 @@ class FactureSerializer(serializers.ModelSerializer):
     paiements = PaiementSerializer(many=True, read_only=True)
     client_nom = serializers.CharField(source="client.nom", read_only=True)
     client_telephone = serializers.CharField(source="client.telephone", read_only=True)
+    utilisateur_nom = serializers.CharField(source="utilisateur.nom", read_only=True)
+    utilisateur_role = serializers.CharField(source="utilisateur.role", read_only=True)
     montant_paye = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     solde_restant = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = Facture
         fields = [
-            "id", "numero_facture", "date_facture", "montant_total",
-            "panier", "client", "client_nom", "client_telephone", "utilisateur",
-            "lignes", "paiements", "montant_paye", "solde_restant",
+            "id", 
+            "numero_facture", 
+            "date_facture",
+            "montant_total",
+            "panier",
+            "client", 
+            "client_nom", 
+            "client_telephone",
+            "utilisateur", 
+            "utilisateur_nom", 
+            "utilisateur_role",
+            "lignes", 
+            "paiements", 
+            "montant_paye", 
+            "solde_restant",
         ]
         read_only_fields = ["numero_facture", "date_facture", "montant_total", "utilisateur"]
-
 class FactureCreateFromPanierSerializer(serializers.Serializer):
-    """Génère une Facture (+ ses LigneFacture) à partir d'un Panier validé."""
-
     panier_id = serializers.PrimaryKeyRelatedField(queryset=Panier.objects.all())
 
     def create(self, validated_data):
@@ -112,7 +125,6 @@ class FactureCreateFromPanierSerializer(serializers.Serializer):
                     quantite=ligne.quantite,
                     sous_total=ligne.quantite * ligne.prix_unitaire,
                 )
-                # décrémente le stock au moment de la facturation
                 ligne.produit.quantite_stock = max(
                     0, ligne.produit.quantite_stock - ligne.quantite
                 )

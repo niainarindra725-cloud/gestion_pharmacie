@@ -10,7 +10,10 @@ export const panierService = {
   create: (payload) => api.post(BASE_PANIER, payload).then((r) => r.data),
   ajouterLigne: (panierId, payload) =>
     api.post(`${BASE_PANIER}${panierId}/ajouter_ligne/`, payload).then((r) => r.data),
+  supprimerLigne: (ligneId) => api.delete(`/lignes-panier/${ligneId}/`),
   remove: (id) => api.delete(`${BASE_PANIER}${id}/`),
+  assignerClient: (panierId, clientId) =>
+    api.patch(`${BASE_PANIER}${panierId}/`, { client: clientId }).then((r) => r.data),
 };
 
 export const factureService = {
@@ -20,6 +23,7 @@ export const factureService = {
     api.post(`${BASE_FACTURE}generer/`, { panier_id: panierId }).then((r) => r.data),
   statistiques7Jours: () => api.get(`${BASE_FACTURE}statistiques/`).then((r) => r.data),
   totalVentes: () => api.get(`${BASE_FACTURE}total_ventes/`).then((r) => r.data),
+  ventesParProduit: () => api.get(`${BASE_FACTURE}ventes_par_produit/`).then((r) => r.data),
 };
 
 
@@ -27,3 +31,4 @@ export const paiementService = {
   getAll: (params) => api.get(BASE_PAIEMENT, { params }).then((r) => r.data),
   create: (payload) => api.post(BASE_PAIEMENT, payload).then((r) => r.data),
 };
+

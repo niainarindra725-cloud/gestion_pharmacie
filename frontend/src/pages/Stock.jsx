@@ -139,7 +139,7 @@ export default function Stock() {
                   <tr key={a.id}>
                     <td>{new Date(a.date_appro).toLocaleString()}</td>
                     <td>{a.fournisseur_nom}</td>
-                    <td className="text-end fw-semibold">{Number(a.montant_total).toFixed(2)}</td>
+                    <td className="text-end fw-semibold">{Number(a.montant_total).toFixed(2)} Ar</td>
                     <td>
                       {a.lignes.map((l) => (
                         <span key={l.id} className="badge bg-light text-dark border me-1 mb-1">
@@ -227,7 +227,7 @@ export default function Stock() {
               className={`form-control ${errors.prix_achat ? "is-invalid" : ""}`}
               placeholder="Prix d'achat"
               value={ligneForm.prix_achat}
-              onChange={(e) => setLigneForm({ ...ligneForm, prix_achat: e.target.value })}
+              onChange={(e) => setLigneForm({ ...ligneForm, prix_achat: e.target.value })} Ar
             />
             {errors.prix_achat && <div className="invalid-feedback">{errors.prix_achat}</div>}
           </div>

@@ -117,3 +117,17 @@
   font-size: 0.85rem;
   margin-top: 20px;
 }
+.auth-bg {
+  align-items: flex-start;
+  overflow-y: auto;
+}
+.auth-card {
+  margin: auto;
+}
+
+@media (max-width: 576px) {
+  .auth-card {
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+}

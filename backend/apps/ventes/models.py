@@ -7,8 +7,6 @@ from apps.medicaments.models import Produit
 
 
 class Panier(models.Model):
-    """Entité PANIER : créé par un Utilisateur, pour un Client (passe)."""
-
     class Statut(models.TextChoices):
         OUVERT = "OUVERT", "Ouvert"
         VALIDE = "VALIDE", "Validé"
@@ -37,8 +35,6 @@ class Panier(models.Model):
 
 
 class LignePanier(models.Model):
-    """Entité LIGNE_PANIER : association Produit <-> Panier."""
-
     panier = models.ForeignKey(Panier, on_delete=models.CASCADE, related_name="lignes")
     produit = models.ForeignKey(Produit, on_delete=models.PROTECT, related_name="lignes_panier")
     quantite = models.PositiveIntegerField()
@@ -54,8 +50,6 @@ class LignePanier(models.Model):
 
 
 class Facture(models.Model):
-    """Entité FACTURE : générée depuis un Panier, émise par un Utilisateur, pour un Client."""
-
     numero_facture = models.CharField(max_length=30, unique=True)
     date_facture = models.DateTimeField(auto_now_add=True)
     montant_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -87,8 +81,6 @@ class Facture(models.Model):
 
 
 class LigneFacture(models.Model):
-    """Entité LIGNE_FACTURE : détail des produits facturés."""
-
     facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name="lignes")
     produit = models.ForeignKey(Produit, on_delete=models.PROTECT, related_name="lignes_facture")
     quantite = models.PositiveIntegerField()
@@ -103,8 +95,6 @@ class LigneFacture(models.Model):
 
 
 class Paiement(models.Model):
-    """Entité PAIEMENT : règle une Facture (regle_par)."""
-
     class Mode(models.TextChoices):
         ESPECES = "ESPECES", "Espèces"
         CARTE = "CARTE", "Carte bancaire"

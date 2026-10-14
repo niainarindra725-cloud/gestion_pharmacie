@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import { produitService } from "../services/medicamentService";
 import { factureService } from "../services/venteService";
 
 
+const COULEURS = ["#0d6efd", "#20c997", "#ffc107", "#dc3545", "#6f42c1", "#fd7e14", "#0dcaf0", "#6c757d"];
+
 export default function Dashboard() {
+
   const [alertesStock, setAlertesStock] = useState([]);
   const [bientotExpires, setBientotExpires] = useState([]);
   const [stats, setStats] = useState([]);
+  const [ventesParProduit, setVentesParProduit] = useState([]);
   const [totalProduits, setTotalProduits] = useState(0);
   const [totalVentes, setTotalVentes] = useState({ montant_total: 0, nombre_factures: 0 });
   const [loading, setLoading] = useState(true);
@@ -18,12 +22,13 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [stock, expir, statistiques, produitsData, ventesGlobales] = await Promise.all([
+        const [stock, expir, statistiques, produitsData, ventesGlobales, repartition] = await Promise.all([
           produitService.alertesStock(),
           produitService.bientotExpires(),
           factureService.statistiques7Jours(),
           produitService.getAll(),
           factureService.totalVentes(),
+          factureService.ventesParProduit(),
         ]);
         setAlertesStock(stock);
         setBientotExpires(expir);
@@ -38,6 +43,7 @@ export default function Dashboard() {
         );
         setTotalProduits(produitsData.count ?? (produitsData.results || produitsData).length);
         setTotalVentes(ventesGlobales);
+        setVentesParProduit(repartition);
       } catch (err) {
         console.error(err);
       } finally {
@@ -46,6 +52,7 @@ export default function Dashboard() {
     };
     load();
   }, []);
+
 
   if (loading) {
     return (
@@ -57,17 +64,12 @@ export default function Dashboard() {
 
   return (
     <div>
-      
-      {/* Cartes statistiques */}
       <div className="row g-4 mb-4">
         <div className="col-md-6 col-lg-3">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 mb-2">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: 48, height: 48, background: "#e0f2fe" }}
-                >
+                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48, background: "#e0f2fe" }}>
                   <i className="bi bi-cash-stack text-primary fs-5"></i>
                 </div>
                 <div>
@@ -86,11 +88,8 @@ export default function Dashboard() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 mb-2">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: 48, height: 48, background: "#ede9fe" }}
-                >
-                  <i className="bi bi-capsule text-purple fs-5" style={{ color: "#7c3aed" }}></i>
+                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48, background: "#ede9fe" }}>
+                  <i className="bi bi-capsule fs-5" style={{ color: "#7c3aed" }}></i>
                 </div>
                 <div>
                   <p className="text-muted mb-0 small">Nombre total de produits</p>
@@ -106,10 +105,7 @@ export default function Dashboard() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 mb-2">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: 48, height: 48, background: "#fef3c7" }}
-                >
+                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48, background: "#fef3c7" }}>
                   <i className="bi bi-exclamation-triangle text-warning fs-5"></i>
                 </div>
                 <div>
@@ -126,10 +122,7 @@ export default function Dashboard() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex align-items-center gap-3 mb-2">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: 48, height: 48, background: "#fee2e2" }}
-                >
+                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48, background: "#fee2e2" }}>
                   <i className="bi bi-hourglass-split text-danger fs-5"></i>
                 </div>
                 <div>
@@ -143,12 +136,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Graphique + Notifications */}
       <div className="row g-4 mb-4">
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-              <span><i className="bi bi-graph-up me-2"></i>Évolution des ventes (7 derniers jours)</span>
+            <div className="card-header bg-white fw-semibold">
+              <i className="bi bi-graph-up me-2"></i>Évolution des ventes (7 derniers jours)
             </div>
             <div className="card-body" style={{ height: 320 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -159,22 +151,8 @@ export default function Dashboard() {
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip />
                   <Legend />
-                  <Bar
-                    yAxisId="right"
-                    dataKey="quantite_produits"
-                    name="Produits vendus"
-                    fill="#93c5fd"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="montant_total"
-                    name="Montant total"
-                    stroke="#0d6efd"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
+                  <Bar yAxisId="right" dataKey="quantite_produits" name="Produits vendus" fill="#93c5fd" radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="left" type="monotone" dataKey="montant_total" name="Montant total" stroke="#0d6efd" strokeWidth={3} dot={{ r: 4 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -184,28 +162,47 @@ export default function Dashboard() {
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-header bg-white fw-semibold">
-              <i className="bi bi-bell me-2"></i>Notifications
+              <i className="bi bi-pie-chart me-2"></i>Quantité vendue par produit
             </div>
-            <div className="card-body p-0" style={{ maxHeight: 320, overflowY: "auto" }}>
-              {alertesStock.length === 0 && bientotExpires.length === 0 ? (
-                <p className="text-muted text-center py-4 mb-0 small">
-                  Aucune alerte pour le moment.
-                </p>
+            <div className="card-body d-flex flex-column" style={{ height: 320 }}>
+              {ventesParProduit.length === 0 ? (
+                <div className="d-flex align-items-center justify-content-center flex-fill text-muted small">
+                  Aucune vente enregistrée.
+                </div>
               ) : (
-                <ul className="list-group list-group-flush">
-                  {alertesStock.map((p) => (
-                    <li key={`s-${p.id}`} className="list-group-item small">
-                      <i className="bi bi-exclamation-triangle text-warning me-2"></i>
-                      Stock faible : <strong>{p.nom}</strong> ({p.quantite_stock} restants)
-                    </li>
-                  ))}
-                  {bientotExpires.map((p) => (
-                    <li key={`e-${p.id}`} className="list-group-item small">
-                      <i className="bi bi-hourglass-split text-danger me-2"></i>
-                      <strong>{p.nom}</strong> expire le {p.date_expiration}
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ResponsiveContainer width="100%" height="70%">
+                    <PieChart>
+                      <Pie
+                        data={ventesParProduit}
+                        dataKey="quantite"
+                        nameKey="produit"
+                        innerRadius="55%"
+                        outerRadius="85%"
+                        paddingAngle={2}
+                      >
+                        {ventesParProduit.map((_, index) => (
+                          <Cell key={index} fill={COULEURS[index % COULEURS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="overflow-auto" style={{ maxHeight: "30%" }}>
+                    {ventesParProduit.map((p, i) => (
+                      <div key={i} className="d-flex align-items-center justify-content-between small py-1">
+                        <span>
+                          <span
+                            className="d-inline-block rounded-circle me-2"
+                            style={{ width: 8, height: 8, background: COULEURS[i % COULEURS.length] }}
+                          ></span>
+                          {p.produit}
+                        </span>
+                        <span className="fw-semibold">{p.quantite}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>

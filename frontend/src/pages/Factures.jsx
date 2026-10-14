@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { factureService } from "../services/venteService";
+import Pagination from "../components/common/Pagination";
+
+const PAR_PAGE = 7;
 
 export default function Factures() {
   const [factures, setFactures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
   const charger = async () => {
     setLoading(true);
-    const data = await factureService.getAll();
+    const data = await factureService.getAll({ page_size: 200 });
     setFactures(data.results || data);
     setLoading(false);
   };
@@ -17,6 +21,9 @@ export default function Factures() {
   useEffect(() => {
     charger();
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(factures.length / PAR_PAGE));
+  const facturesPage = factures.slice((page - 1) * PAR_PAGE, page * PAR_PAGE);
 
   if (loading) {
     return (
@@ -48,21 +55,21 @@ export default function Factures() {
               </tr>
             </thead>
             <tbody>
-              {factures.length === 0 && (
+              {facturesPage.length === 0 && (
                 <tr>
                   <td colSpan="8" className="text-center text-muted py-4">
                     Aucune facture enregistrée.
                   </td>
                 </tr>
               )}
-              {factures.map((f) => (
+              {facturesPage.map((f) => (
                 <tr key={f.id}>
                   <td className="fw-semibold">{f.numero_facture}</td>
                   <td>{f.client_nom || <span className="text-muted">—</span>}</td>
                   <td>{new Date(f.date_facture).toLocaleString()}</td>
-                  <td className="text-end">{Number(f.montant_total).toFixed(2)}</td>
-                  <td className="text-end">{Number(f.montant_paye).toFixed(2)}</td>
-                  <td className="text-end">{Number(f.solde_restant).toFixed(2)}</td>
+                  <td className="text-end">{Number(f.montant_total).toFixed(2)} Ar</td>
+                  <td className="text-end">{Number(f.montant_paye).toFixed(2)} Ar</td>
+                  <td className="text-end">{Number(f.solde_restant).toFixed(2)} Ar</td>
                   <td className="text-center">
                     {Number(f.solde_restant) > 0 ? (
                       <span className="badge bg-warning text-dark">Impayée</span>
@@ -83,6 +90,12 @@ export default function Factures() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="card-footer bg-white d-flex justify-content-center">
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          </div>
+        )}
       </div>
     </div>
   );

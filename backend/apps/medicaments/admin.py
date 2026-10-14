@@ -13,8 +13,13 @@ class CategorieAdmin(admin.ModelAdmin):
 @admin.register(Produit)
 class ProduitAdmin(admin.ModelAdmin):
     list_display = [
-        "id", "nom", "categorie", "prix_vente",
-        "quantite_stock", "seuil_alerte", "date_expiration",
+        "id", 
+        "nom", 
+        "categorie", 
+        "prix_vente",
+        "quantite_stock", 
+        "seuil_alerte", 
+        "date_expiration",
     ]
     list_filter = ["categorie"]
     search_fields = ["nom"]

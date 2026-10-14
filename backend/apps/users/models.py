@@ -3,12 +3,6 @@ from django.contrib.auth.models import AbstractUser
 
 
 class Utilisateur(AbstractUser):
-    """
-    Entité UTILISATEUR du MCD.
-    Hérite de AbstractUser -> username fait office de 'login',
-    le mot de passe est géré nativement par Django (hash sécurisé).
-    """
-
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Administrateur"
         PHARMACIEN = "PHARMACIEN", "Pharmacien"

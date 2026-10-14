@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from datetime import timedelta
 from django.utils import timezone
+from datetime import timedelta, datetime
 from django.db.models import Sum
 from .models import Panier, LignePanier, Facture, LigneFacture, Paiement
 
@@ -58,17 +59,23 @@ class FactureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def statistiques(self, request):
         """Montant total et quantité de produits vendus sur les 7 derniers jours."""
-        aujourd_hui = timezone.now().date()
+        tz = timezone.get_current_timezone()
+        aujourd_hui = timezone.localtime(timezone.now()).date()
         debut = aujourd_hui - timedelta(days=6)
         resultats = []
         for i in range(7):
             jour = debut + timedelta(days=i)
-            montant = Facture.objects.filter(date_facture__date=jour).aggregate(
-                total=Sum("montant_total")
-            )["total"] or 0
+            debut_jour = timezone.make_aware(datetime.combine(jour, datetime.min.time()), tz)
+            fin_jour = debut_jour + timedelta(days=1)
+
+            montant = Facture.objects.filter(
+                date_facture__gte=debut_jour, date_facture__lt=fin_jour
+            ).aggregate(total=Sum("montant_total"))["total"] or 0
+
             quantite = LigneFacture.objects.filter(
-                facture__date_facture__date=jour
+                facture__date_facture__gte=debut_jour, facture__date_facture__lt=fin_jour
             ).aggregate(total=Sum("quantite"))["total"] or 0
+
             resultats.append({
                 "date": jour.isoformat(),
                 "montant_total": float(montant),
@@ -85,6 +92,19 @@ class FactureViewSet(viewsets.ModelViewSet):
             "montant_total": float(total),
             "nombre_factures": nombre_factures,
         })
+    
+    @action(detail=False, methods=["get"])
+    def ventes_par_produit(self, request):
+        """Quantité totale vendue pour chaque produit (toutes ventes confondues)."""
+        resultats = (
+            LigneFacture.objects.values("produit__nom")
+            .annotate(quantite_totale=Sum("quantite"))
+            .order_by("-quantite_totale")[:8]
+        )
+        return Response([
+            {"produit": r["produit__nom"], "quantite": r["quantite_totale"]}
+            for r in resultats
+        ])
 
 
 class PaiementViewSet(viewsets.ModelViewSet):

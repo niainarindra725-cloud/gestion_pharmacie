@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { categorieService } from "../services/medicamentService";
 import Modal from "../components/common/Modal";
+import Pagination from "../components/common/Pagination";
+
+const PAR_PAGE = 6;
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -10,6 +13,7 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
 
   const charger = async () => {
     setLoading(true);
@@ -69,6 +73,9 @@ export default function Categories() {
     }
   };
 
+  const totalPages = Math.max(1, Math.ceil(categories.length / PAR_PAGE));
+  const categoriesPage = categories.slice((page - 1) * PAR_PAGE, page * PAR_PAGE);
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -86,47 +93,54 @@ export default function Categories() {
             <div className="spinner-border text-primary"></div>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Libellé</th>
-                  <th className="text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.length === 0 && (
+          <>
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead className="table-light">
                   <tr>
-                    <td colSpan="2" className="text-center text-muted py-4">
-                      Aucune catégorie.
-                    </td>
+                    <th>Libellé</th>
+                    <th className="text-center">Actions</th>
                   </tr>
-                )}
-                {categories.map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <i className="bi bi-tag me-2 text-secondary"></i>
-                      {c.libelle}
-                    </td>
-                    <td className="text-center">
-                      <button
-                        className="btn btn-sm btn-outline-primary me-2"
-                        onClick={() => ouvrirEdition(c)}
-                      >
-                        <i className="bi bi-pencil"></i>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(c.id)}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {categoriesPage.length === 0 && (
+                    <tr>
+                      <td colSpan="2" className="text-center text-muted py-4">
+                        Aucune catégorie.
+                      </td>
+                    </tr>
+                  )}
+                  {categoriesPage.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        {c.libelle}
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-primary me-2"
+                          onClick={() => ouvrirEdition(c)}
+                        >
+                          <i className="bi bi-pencil"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(c.id)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="card-footer bg-white d-flex justify-content-center">
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+              </div>
+            )}
+          </>
         )}
       </div>
 

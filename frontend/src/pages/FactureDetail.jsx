@@ -85,7 +85,7 @@ export default function FactureDetail() {
           <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
             <div>
               <h3 className="mb-1">
-                <i className="bi bi-capsule-pill text-primary me-2"></i>Pharmacie
+                <i className="bbi bi-heart-pulse text-primary me-2"></i>Pharmacie
               </h3>
               <p className="text-muted mb-0">Facture de vente</p>
             </div>
@@ -110,6 +110,13 @@ export default function FactureDetail() {
                 </p>
               )}
             </div>
+            <div className="col-md-6 text-md-end">
+              <h6 className="text-muted text-uppercase small">Vendu par</h6>
+              <p className="mb-0 fw-semibold">
+                {facture.utilisateur_nom}
+              </p>
+              <p className="mb-0 text-muted small">{facture.utilisateur_role}</p>
+            </div>
           </div>
 
           <div className="table-responsive mb-4">
@@ -127,8 +134,8 @@ export default function FactureDetail() {
                   <tr key={l.id}>
                     <td>{l.produit_nom}</td>
                     <td className="text-center">{l.quantite}</td>
-                    <td className="text-end">{(l.sous_total / l.quantite).toFixed(2)}</td>
-                    <td className="text-end">{Number(l.sous_total).toFixed(2)}</td>
+                    <td className="text-end">{(l.sous_total / l.quantite).toFixed(2)} Ar</td>
+                    <td className="text-end">{Number(l.sous_total).toFixed(2)} Ar</td>
                   </tr>
                 ))}
               </tbody>
@@ -141,15 +148,15 @@ export default function FactureDetail() {
                 <tbody>
                   <tr>
                     <td>Montant total</td>
-                    <td className="text-end fw-semibold">{Number(facture.montant_total).toFixed(2)}</td>
+                    <td className="text-end fw-semibold">{Number(facture.montant_total).toFixed(2)} Ar</td>
                   </tr>
                   <tr>
                     <td>Montant payé</td>
-                    <td className="text-end text-success">{Number(facture.montant_paye).toFixed(2)}</td>
+                    <td className="text-end text-success">{Number(facture.montant_paye).toFixed(2)} Ar</td>
                   </tr>
                   <tr className="border-top">
                     <td className="fw-bold">Solde restant</td>
-                    <td className="text-end fw-bold text-danger">{Number(facture.solde_restant).toFixed(2)}</td>
+                    <td className="text-end fw-bold text-danger">{Number(facture.solde_restant).toFixed(2)} Ar</td>
                   </tr>
                 </tbody>
               </table>
@@ -171,10 +178,10 @@ export default function FactureDetail() {
               {facture.paiements.map((p) => (
                 <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
                   <span>
-                    {new Date(p.date_paiement).toLocaleString()} —{" "}
+                    {new Date(p.date_paiement).toLocaleString()} :{" "}
                     <span className="badge bg-secondary">{p.mode_paiement}</span>
                   </span>
-                  <span className="fw-semibold">{Number(p.montant).toFixed(2)}</span>
+                  <span className="fw-semibold">{Number(p.montant).toFixed(2)} Ar</span>
                 </li>
               ))}
             </ul>
@@ -205,19 +212,19 @@ export default function FactureDetail() {
               type="number"
               step="0.01"
               className={`form-control ${erreurs.montant ? "is-invalid" : ""}`}
-              value={montant}
+              value={montant}Ar
               onChange={(e) => setMontant(e.target.value)}
             />
             {erreurs.montant && <div className="invalid-feedback">{erreurs.montant}</div>}
-            <div className="form-text">Solde restant : {facture.solde_restant}</div>
+            <div className="form-text">Solde restant : {facture.solde_restant} Ar</div>
           </div>
 
           <div className="mb-2">
             <label className="form-label">Mode de paiement</label>
             <select
               className={`form-select ${erreurs.mode_paiement ? "is-invalid" : ""}`}
-              value={modePaiement}
-              onChange={(e) => setModePaiement(e.target.value)}
+              value={modePaiement} 
+              onChange={(e) => setModePaiement(e.target.value)} 
             >
               <option value="ESPECES">Espèces</option>
               <option value="CARTE">Carte bancaire</option>

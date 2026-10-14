@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { categorieService, produitService } from "../services/medicamentService";
 import Modal from "../components/common/Modal";
+import Pagination from "../components/common/Pagination";
 
 const initialForm = {
   nom: "", prix_vente: "", quantite_stock: "",
   seuil_alerte: "", date_expiration: "", categorie: "",
 };
-const PAR_PAGE = 7;
+const PAR_PAGE = 6;
 
 export default function Medicaments() {
   const [produits, setProduits] = useState([]);
@@ -39,14 +40,32 @@ export default function Medicaments() {
 
   const valider = () => {
     const erreurs = {};
-    if (!form.nom.trim()) erreurs.nom = "Le nom est obligatoire.";
+    const nom = form.nom.trim();
+
+    if (!nom) {
+      erreurs.nom = "Le nom est obligatoire.";
+    } else if (!/[A-Za-zÀ-ÿ]/.test(nom)) {
+      erreurs.nom = "Le nom du produit doit contenir au moins une lettre.";
+    }
+
     if (!form.prix_vente || Number(form.prix_vente) <= 0)
       erreurs.prix_vente = "Le prix de vente doit être supérieur à 0.";
     if (form.quantite_stock === "" || Number(form.quantite_stock) < 0)
       erreurs.quantite_stock = "La quantité en stock est obligatoire.";
     if (form.seuil_alerte === "" || Number(form.seuil_alerte) < 0)
       erreurs.seuil_alerte = "Le seuil d'alerte est obligatoire.";
-    if (!form.date_expiration) erreurs.date_expiration = "La date d'expiration est obligatoire.";
+
+    if (!form.date_expiration) {
+      erreurs.date_expiration = "La date d'expiration est obligatoire.";
+    } else {
+      const aujourdHui = new Date();
+      aujourdHui.setHours(0, 0, 0, 0);
+      const dateExp = new Date(form.date_expiration);
+      if (dateExp < aujourdHui) {
+        erreurs.date_expiration = "Médicament date dépassée. Impossible d'ajouter un produit déjà expiré.";
+      }
+    }
+
     if (!form.categorie) erreurs.categorie = "Veuillez choisir une catégorie.";
     setErrors(erreurs);
     return Object.keys(erreurs).length === 0;
@@ -69,11 +88,15 @@ export default function Medicaments() {
       const data = err?.response?.data;
       if (data?.nom) {
         setErrors({ nom: Array.isArray(data.nom) ? data.nom[0] : data.nom });
+      } else if (data?.date_expiration) {
+        setErrors({
+          date_expiration: Array.isArray(data.date_expiration)
+            ? data.date_expiration[0]
+            : data.date_expiration,
+        });
       } else {
         setErrors({ general: "Une erreur est survenue. Vérifiez les champs." });
       }
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -207,25 +230,7 @@ export default function Medicaments() {
 
             {totalPages > 1 && (
               <div className="card-footer bg-white d-flex justify-content-center">
-                <nav>
-                  <ul className="pagination mb-0">
-                    <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-                      <button className="page-link" onClick={() => setPage(page - 1)}>
-                        <i className="bi bi-chevron-left"></i>
-                      </button>
-                    </li>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                      <li key={n} className={`page-item ${page === n ? "active" : ""}`}>
-                        <button className="page-link" onClick={() => setPage(n)}>{n}</button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-                      <button className="page-link" onClick={() => setPage(page + 1)}>
-                        <i className="bi bi-chevron-right"></i>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
               </div>
             )}
           </>

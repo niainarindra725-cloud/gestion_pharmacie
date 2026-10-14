@@ -7,7 +7,13 @@ Utilisateur = get_user_model()
 class UtilisateurSerializer(serializers.ModelSerializer):
     class Meta:
         model = Utilisateur
-        fields = ["id", "username", "nom", "email", "role", "is_active", "date_joined"]
+        fields = ["id", 
+                  "username", 
+                  "nom", "email", 
+                  "role", 
+                  "is_active", 
+                  "is_superuser", 
+                  "date_joined"]
         read_only_fields = ["id", "date_joined"]
 
 
@@ -16,7 +22,12 @@ class UtilisateurCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Utilisateur
-        fields = ["id", "username", "nom", "email", "role", "password"]
+        fields = ["id", 
+                  "username", 
+                  "nom", 
+                  "email", 
+                  "role", 
+                  "password"]
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -27,14 +38,18 @@ class UtilisateurCreateSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Inscription publique : le compte est créé désactivé, en attente de validation admin."""
-
+    
     password = serializers.CharField(write_only=True, min_length=6)
     role = serializers.ChoiceField(choices=Utilisateur.Role.choices, default=Utilisateur.Role.CAISSIER)
 
     class Meta:
         model = Utilisateur
-        fields = ["id", "username", "nom", "email", "password", "role"]
+        fields = ["id", 
+                  "username", 
+                  "nom", 
+                  "email", 
+                  "password", 
+                  "role"]
 
     def validate_username(self, value):
         if Utilisateur.objects.filter(username=value).exists():

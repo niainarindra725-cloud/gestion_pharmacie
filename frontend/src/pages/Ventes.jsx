@@ -5,6 +5,29 @@ import { clientService } from "../services/clientService";
 import { produitService } from "../services/medicamentService";
 import Modal from "../components/common/Modal";
 
+
+const NOM_REGEX = /^[A-Za-zÀ-ÿ\s'-]+$/;
+const TEL_CARACTERES_REGEX = /^[0-9+\s]*$/;
+
+function validerTelephone(value) {
+  const sansEspaces = value.replace(/\s/g, "");
+  if (!sansEspaces) return null;
+
+  if (sansEspaces.startsWith("+261")) {
+    const chiffres = sansEspaces.slice(4);
+    if (!/^\d+$/.test(chiffres) || chiffres.length !== 9) {
+      return "Numéro invalide ou incomplet.";
+    }
+  } else if (sansEspaces.startsWith("0")) {
+    if (!/^\d+$/.test(sansEspaces) || sansEspaces.length !== 10) {
+      return "Numéro invalide ou incomplet.";
+    }
+  } else {
+    return "Le numéro doit commencer par 0 ou +261.";
+  }
+  return null;
+}
+
 export default function Ventes() {
   const [clients, setClients] = useState([]);
   const [produits, setProduits] = useState([]);
@@ -15,10 +38,12 @@ export default function Ventes() {
   const [loading, setLoading] = useState(true);
   const [generation, setGeneration] = useState(false);
   const [erreurAjout, setErreurAjout] = useState("");
+  const [erreurValidation, setErreurValidation] = useState("");
+  const [suppressionId, setSuppressionId] = useState(null);
 
   const [showClientModal, setShowClientModal] = useState(false);
   const [nouveauClient, setNouveauClient] = useState({ nom: "", telephone: "" });
-  const [erreurClient, setErreurClient] = useState("");
+  const [erreurClient, setErreurClient] = useState({});
   const [savingClient, setSavingClient] = useState(false);
 
   const navigate = useNavigate();
@@ -44,20 +69,28 @@ export default function Ventes() {
       await charger();
       await initPanier();
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const rafraichirPanier = async () => {
+    const panierRafraichi = await panierService.getOne(panier.id);
+    setPanier(panierRafraichi);
+  };
 
   const ajouterAuPanier = async () => {
     setErreurAjout("");
-    if (!panier || !produitChoisi) return;
+    setErreurValidation("");
 
-    const prod = produits.find((p) => p.id === Number(produitChoisi));
+    if (!produitChoisi) {
+      setErreurAjout("Veuillez choisir un produit.");
+      return;
+    }
     const qte = Number(quantite);
-
     if (!qte || qte <= 0) {
       setErreurAjout("Veuillez saisir une quantité valide.");
       return;
     }
+
+    const prod = produits.find((p) => p.id === Number(produitChoisi));
     if (qte > prod.quantite_stock) {
       setErreurAjout(`Stock insuffisant. Disponible : ${prod.quantite_stock}`);
       return;
@@ -69,8 +102,7 @@ export default function Ventes() {
         quantite: qte,
         prix_unitaire: prod.prix_vente,
       });
-      const panierRafraichi = await panierService.getOne(panier.id);
-      setPanier(panierRafraichi);
+      await rafraichirPanier();
       setProduitChoisi("");
       setQuantite(1);
     } catch (err) {
@@ -79,15 +111,36 @@ export default function Ventes() {
     }
   };
 
-  const validerFacture = async () => {
-    if (!panier || !panier.lignes?.length) return;
+  const retirerLigne = async (ligneId) => {
+    setSuppressionId(ligneId);
+    try {
+      await panierService.supprimerLigne(ligneId);
+      await rafraichirPanier();
+    } finally {
+      setSuppressionId(null);
+    }
+  };
+
+    const validerFacture = async () => {
+    setErreurValidation("");
+
+    if (!client) {
+      setErreurValidation("Veuillez sélectionner un client avant de générer la facture.");
+      return;
+    }
+
+    if (!panier || !panier.lignes?.length) {
+      setErreurValidation("Ajoutez au moins un produit au panier avant de générer la facture.");
+      return;
+    }
+
     setGeneration(true);
     try {
-      if (client) {
-        // relie le client au panier avant la facturation si besoin d'implémenter un endpoint dédié
-      }
+      await panierService.assignerClient(panier.id, Number(client));
       const facture = await factureService.genererDepuisPanier(panier.id);
       navigate(`/factures/${facture.id}`);
+    } catch (err) {
+      setErreurValidation("Erreur lors de la génération de la facture.");
     } finally {
       setGeneration(false);
     }
@@ -95,24 +148,42 @@ export default function Ventes() {
 
   const ouvrirModalClient = () => {
     setNouveauClient({ nom: "", telephone: "" });
-    setErreurClient("");
+    setErreurClient({});
     setShowClientModal(true);
   };
 
   const handleCreerClient = async (e) => {
     e.preventDefault();
-    if (!nouveauClient.nom.trim()) {
-      setErreurClient("Le nom du client est obligatoire.");
-      return;
+    const erreurs = {};
+    const nom = nouveauClient.nom.trim();
+
+    if (!nom) {
+      erreurs.nom = "Le nom du client est obligatoire.";
+    } else if (!NOM_REGEX.test(nom)) {
+      erreurs.nom = "Le nom ne doit contenir que des lettres.";
     }
+
+    if (nouveauClient.telephone) {
+      const erreurTel = validerTelephone(nouveauClient.telephone);
+      if (erreurTel) erreurs.telephone = erreurTel;
+    }
+
+    setErreurClient(erreurs);
+    if (Object.keys(erreurs).length > 0) return;
+
     setSavingClient(true);
     try {
       const created = await clientService.create(nouveauClient);
       setClients([...clients, created]);
       setClient(String(created.id));
       setShowClientModal(false);
-    } catch {
-      setErreurClient("Erreur lors de la création du client.");
+    } catch (err) {
+      const data = err?.response?.data;
+      setErreurClient({
+        nom: data?.nom?.[0],
+        telephone: data?.telephone?.[0],
+        general: !data?.nom && !data?.telephone ? "Erreur lors de la création du client." : "",
+      });
     } finally {
       setSavingClient(false);
     }
@@ -134,16 +205,15 @@ export default function Ventes() {
 
       <div className="card border-0 shadow-sm">
         <div className="card-body">
-          {/* Client */}
           <div className="row g-2 align-items-end mb-3">
             <div className="col-md-8">
-              <label className="form-label">Client (optionnel)</label>
+              {/* <label className="form-label">
+                Client <span className="text-danger">*</span>
+              </label> */}
               <select className="form-select" value={client} onChange={(e) => setClient(e.target.value)}>
-                <option value="">-- Vente sans client enregistré --</option>
+                <option value="">-- Sélectionner un client --</option>
                 {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nom} {c.telephone ? `— ${c.telephone}` : ""}
-                  </option>
+                  <option key={c.id} value={c.id}>{c.nom}</option>
                 ))}
               </select>
             </div>
@@ -156,7 +226,6 @@ export default function Ventes() {
 
           <hr />
 
-          {/* Ajout produit */}
           {erreurAjout && <div className="alert alert-danger py-2">{erreurAjout}</div>}
           <div className="row g-2 mb-3">
             <div className="col-md-6">
@@ -167,9 +236,7 @@ export default function Ventes() {
               >
                 <option value="">-- Choisir un produit --</option>
                 {produits.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nom} ({p.prix_vente} / stock: {p.quantite_stock})
-                  </option>
+                  <option key={p.id} value={p.id}>{p.nom}</option>
                 ))}
               </select>
             </div>
@@ -190,7 +257,6 @@ export default function Ventes() {
             </div>
           </div>
 
-          {/* Table panier */}
           <div className="table-responsive">
             <table className="table table-hover align-middle">
               <thead className="table-light">
@@ -199,12 +265,13 @@ export default function Ventes() {
                   <th className="text-center">Quantité</th>
                   <th className="text-end">Prix unitaire</th>
                   <th className="text-end">Sous-total</th>
+                  <th className="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {(!panier?.lignes || panier.lignes.length === 0) && (
                   <tr>
-                    <td colSpan="4" className="text-center text-muted py-3">
+                    <td colSpan="5" className="text-center text-muted py-3">
                       Aucun produit ajouté au panier.
                     </td>
                   </tr>
@@ -213,26 +280,43 @@ export default function Ventes() {
                   <tr key={l.id}>
                     <td>{l.produit_nom}</td>
                     <td className="text-center">{l.quantite}</td>
-                    <td className="text-end">{Number(l.prix_unitaire).toFixed(2)}</td>
-                    <td className="text-end">{(l.quantite * l.prix_unitaire).toFixed(2)}</td>
+                    <td className="text-end">{Number(l.prix_unitaire).toFixed(2)} Ar</td>
+                    <td className="text-end">{(l.quantite * l.prix_unitaire).toFixed(2)} Ar</td>
+                    <td className="text-center">
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => retirerLigne(l.id)}
+                        disabled={suppressionId === l.id}
+                      >
+                        {suppressionId === l.id ? (
+                          <span className="spinner-border spinner-border-sm"></span>
+                        ) : (
+                          <i className="bi bi-trash"></i>
+                        )}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
                   <th colSpan="3" className="text-end">Total</th>
-                  <th className="text-end">{Number(panier?.montant_total || 0).toFixed(2)}</th>
+                  <th className="text-end">{Number(panier?.montant_total || 0).toFixed(2)} Ar</th>
+                  <th></th>
                 </tr>
               </tfoot>
             </table>
           </div>
 
+          {erreurValidation && (
+            <div className="alert alert-danger py-2 d-flex align-items-center">
+              <i className="bi bi-exclamation-circle me-2"></i>
+              {erreurValidation}
+            </div>
+          )}
+
           <div className="text-end">
-            <button
-              className="btn btn-success"
-              onClick={validerFacture}
-              disabled={!panier?.lignes?.length || generation}
-            >
+            <button className="btn btn-success" onClick={validerFacture} disabled={generation}>
               {generation ? (
                 <span className="spinner-border spinner-border-sm me-2"></span>
               ) : (
@@ -259,24 +343,38 @@ export default function Ventes() {
           </>
         }
       >
-        {erreurClient && <div className="alert alert-danger py-2">{erreurClient}</div>}
+        {erreurClient.general && <div className="alert alert-danger py-2">{erreurClient.general}</div>}
+        {erreurClient.nom && (
+          <div className="alert alert-danger py-2 d-flex align-items-center">
+            <i className="bi bi-exclamation-circle me-2"></i>
+            {erreurClient.nom}
+          </div>
+        )}
         <form onSubmit={handleCreerClient}>
           <div className="mb-3">
             <label className="form-label">Nom</label>
             <input
-              className="form-control"
+              className={`form-control ${erreurClient.nom ? "is-invalid" : ""}`}
               value={nouveauClient.nom}
               onChange={(e) => setNouveauClient({ ...nouveauClient, nom: e.target.value })}
               autoFocus
             />
+            {erreurClient.nom && <div className="invalid-feedback">{erreurClient.nom}</div>}
           </div>
           <div className="mb-2">
             <label className="form-label">Téléphone</label>
             <input
-              className="form-control"
+              className={`form-control ${erreurClient.telephone ? "is-invalid" : ""}`}
+              placeholder="0XX XX XXX XX ou +261 XX XX XXX XX"
               value={nouveauClient.telephone}
-              onChange={(e) => setNouveauClient({ ...nouveauClient, telephone: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (TEL_CARACTERES_REGEX.test(val)) {
+                  setNouveauClient({ ...nouveauClient, telephone: val });
+                }
+              }}
             />
+            {erreurClient.telephone && <div className="invalid-feedback">{erreurClient.telephone}</div>}
           </div>
         </form>
       </Modal>
