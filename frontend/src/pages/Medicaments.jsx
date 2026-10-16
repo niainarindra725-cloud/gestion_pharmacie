@@ -235,7 +235,7 @@ export default function Medicaments() {
                     >
                       <td className="fw-semibold">{p.nom}</td>
                       <td>{p.categorie_libelle}</td>
-                      <td className="text-end">{Number(p.prix_vente).toFixed(2)}</td>
+                      <td className="text-end">{Number(p.prix_vente).toFixed(2)} Ar</td>
                       <td className="text-center">{p.quantite_stock}</td>
                       <td className="text-center">{p.seuil_alerte}</td>
                       <td>{p.date_expiration}</td>
