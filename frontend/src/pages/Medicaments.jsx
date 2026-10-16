@@ -19,6 +19,7 @@ export default function Medicaments() {
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [recherche, setRecherche] = useState("");
+  const [filtreCategorie, setFiltreCategorie] = useState("");
   const [page, setPage] = useState(1);
 
   const charger = async () => {
@@ -131,15 +132,18 @@ export default function Medicaments() {
     }
   };
 
-  const produitsFiltres = produits.filter((p) =>
-    p.nom.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const produitsFiltres = produits.filter((p) => {
+    const correspondNom = p.nom.toLowerCase().includes(recherche.toLowerCase());
+    const correspondCategorie =
+      !filtreCategorie || String(p.categorie) === filtreCategorie;
+    return correspondNom && correspondCategorie;
+  });
   const totalPages = Math.max(1, Math.ceil(produitsFiltres.length / PAR_PAGE));
   const produitsPage = produitsFiltres.slice((page - 1) * PAR_PAGE, page * PAR_PAGE);
 
   useEffect(() => {
     setPage(1);
-  }, [recherche]);
+  }, [recherche, filtreCategorie]);
 
   return (
     <div>
@@ -154,17 +158,44 @@ export default function Medicaments() {
 
       <div className="card border-0 shadow-sm mb-3">
         <div className="card-body py-2">
-          <div className="input-group" style={{ maxWidth: 400 }}>
-            <span className="input-group-text bg-light">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Rechercher un produit..."
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-            />
+          <div className="row g-2">
+            <div className="col-md-6">
+              <div className="input-group">
+                <span className="input-group-text bg-light">
+                  <i className="bi bi-search"></i>
+                </span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Rechercher un produit..."
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-md-4">
+              <select
+                className="form-select"
+                value={filtreCategorie}
+                onChange={(e) => setFiltreCategorie(e.target.value)}
+              >
+                <option value="">Toutes les catégories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.libelle}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <button
+                className="btn btn-outline-secondary w-100"
+                onClick={() => {
+                  setRecherche("");
+                  setFiltreCategorie("");
+                }}
+              >
+                Réinitialiser
+              </button>
+            </div>
           </div>
         </div>
       </div>
