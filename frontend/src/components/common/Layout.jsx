@@ -13,6 +13,7 @@ const MENU = [
   { to: "/factures", label: "Factures", icon: "bi-receipt" },
   { to: "/clients", label: "Clients", icon: "bi-people" },
   { to: "/fournisseurs", label: "Fournisseurs", icon: "bi-truck" },
+  { to: "/a-propos", label: "A Propos", icon: "bi bi-exclamation-square" },
 ];
 
 export default function Layout() {

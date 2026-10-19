@@ -7,8 +7,6 @@ from apps.medicaments.models import Produit
 
 
 class Approvisionnement(models.Model):
-    """Entité APPROVISIONNEMENT : livré par un Fournisseur, enregistré par un Utilisateur."""
-
     date_appro = models.DateTimeField(auto_now_add=True)
     fournisseur = models.ForeignKey(
         Fournisseur, on_delete=models.PROTECT, related_name="approvisionnements"
@@ -31,8 +29,6 @@ class Approvisionnement(models.Model):
 
 
 class LigneAppro(models.Model):
-    """Entité LIGNE_APPRO : association Produit <-> Approvisionnement."""
-
     approvisionnement = models.ForeignKey(
         Approvisionnement, on_delete=models.CASCADE, related_name="lignes"
     )
@@ -51,7 +47,6 @@ class LigneAppro(models.Model):
         return f"{self.produit.nom} x{self.quantite_recue}"
 
     def save(self, *args, **kwargs):
-        """Réapprovisionne automatiquement le stock du produit."""
         is_new = self._state.adding
         super().save(*args, **kwargs)
         if is_new:

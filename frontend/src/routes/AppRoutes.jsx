@@ -16,6 +16,7 @@ import FactureDetail from "../pages/FactureDetail";
 import Clients from "../pages/Clients";
 import Fournisseurs from "../pages/Fournisseurs";
 import UtilisateursEnAttente from "../pages/UtilisateursEnAttente";
+import Apropos from "../pages/Apropos";
 import Layout from "../components/common/Layout";
 import { useAuth } from "../context/AuthContext";
 
@@ -50,6 +51,7 @@ export default function AppRoutes() {
         <Route path="clients" element={<Clients />} />
         <Route path="fournisseurs" element={<Fournisseurs />} />
         <Route path="utilisateurs" element={<UtilisateursEnAttente />} />
+        <Route path="a-propos" element={<Apropos />} />
       </Route>
 
       <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
