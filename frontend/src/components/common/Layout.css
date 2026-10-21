@@ -159,12 +159,84 @@ html, body {
   justify-content: center;
 }
 
+.apropos-container {
+  width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.mcd-card {
+  width: 100%;
+  max-width: 1200px; 
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  transition: all 0.25s ease-in-out;
+}
+.mcd-title {
+  text-align: center;
+  color: #1e293b;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+.mcd-img-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto; 
+  padding: 0.5rem 0;
+}
+.apropos-container {
+  width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.mcd-card {
+  width: 100%;
+  max-width: 1200px; 
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  transition: all 0.25s ease-in-out;
+}
+.mcd-title {
+  text-align: center;
+  color: #1e293b;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.mcd-img-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
 @media (min-width: 992px) {
   .app-sidebar.collapsed { width: 76px; }
   .app-sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
   .app-sidebar.collapsed .sidebar-link {
     justify-content: center;
-    padding: 11px;
+    padding: 10px 0;
   }
   .app-sidebar.collapsed .sidebar-link span,
   .app-sidebar.collapsed .sidebar-brand span,
@@ -205,4 +277,62 @@ html, body {
     font-size: 0.85rem;
   }
   .app-navbar { padding-left: 12px !important; padding-right: 12px !important; }
+  .apropos-container {
+        padding: 0.75rem;
+    }
+    .mcd-card {
+        padding: 1rem;
+    }
+}
+@media (min-width: 992px) {
+  .app-sidebar.collapsed .sidebar-brand {
+    padding: 10px 0;
+    justify-content: center;
+  }
+
+  .app-sidebar.collapsed .sidebar-brand-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 1rem;
+  }
+
+  .app-sidebar.collapsed .sidebar-nav {
+    padding: 4px 8px;
+    gap: 2px;
+  }
+
+  .app-sidebar.collapsed .sidebar-link {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .app-sidebar.collapsed .sidebar-link i {
+    font-size: 1rem;
+  }
+
+  .app-sidebar.collapsed .sidebar-footer {
+    padding: 8px;
+  }
+
+  .app-sidebar.collapsed .sidebar-scroll {
+    overflow-y: hidden;
+  }
+}
+@media (max-height: 760px) {
+  .sidebar-link {
+    padding: 8px 12px;
+  }
+  .sidebar-nav {
+    gap: 2px;
+  }
+  .sidebar-brand {
+    padding: 10px 14px;
+  }
+  .sidebar-scroll {
+    scrollbar-width: none;
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    display: none;
+  }
 }
