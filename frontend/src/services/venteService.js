@@ -24,6 +24,7 @@ export const factureService = {
   statistiques7Jours: () => api.get(`${BASE_FACTURE}statistiques/`).then((r) => r.data),
   totalVentes: () => api.get(`${BASE_FACTURE}total_ventes/`).then((r) => r.data),
   ventesParProduit: () => api.get(`${BASE_FACTURE}ventes_par_produit/`).then((r) => r.data),
+  ventesDuJour: async () => (await api.get("/factures/ventes_du_jour/")).data,
 };
 
 

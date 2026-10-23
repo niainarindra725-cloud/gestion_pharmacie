@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from datetime import timedelta
 from django.utils import timezone
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 from django.db.models import Sum
 from .models import Panier, LignePanier, Facture, LigneFacture, Paiement
 
@@ -44,7 +44,7 @@ class FactureViewSet(viewsets.ModelViewSet):
     queryset = Facture.objects.all().prefetch_related("lignes", "paiements")
     serializer_class = FactureSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ["get", "post", "head", "options"]  # pas d'update/delete sur une facture
+    http_method_names = ["get", "post", "head", "options"]  
 
     @action(detail=False, methods=["post"])
     def generer(self, request):
@@ -106,6 +106,22 @@ class FactureViewSet(viewsets.ModelViewSet):
             for r in resultats
         ])
 
+    @action(detail=False, methods=["get"])
+    def ventes_du_jour(self, request):
+        aujourdhui = timezone.localdate()
+        debut = timezone.make_aware(datetime.combine(aujourdhui, time.min))
+        fin = debut + timedelta(days=1)
+
+        factures = Facture.objects.filter(
+            date_facture__gte=debut, date_facture__lt=fin
+        )
+        total = factures.aggregate(t=Sum("montant_total"))["t"] or 0
+
+        return Response({
+            "date": aujourdhui,
+            "montant_total": total,
+            "nombre_factures": factures.count(),
+        })
 
 class PaiementViewSet(viewsets.ModelViewSet):
     queryset = Paiement.objects.all()

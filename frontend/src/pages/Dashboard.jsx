@@ -16,20 +16,22 @@ export default function Dashboard() {
   const [stats, setStats] = useState([]);
   const [ventesParProduit, setVentesParProduit] = useState([]);
   const [totalProduits, setTotalProduits] = useState(0);
-  const [totalVentes, setTotalVentes] = useState({ montant_total: 0, nombre_factures: 0 });
+  const [ventesJour, setVentesJour] = useState({ montant_total: 0, nombre_factures: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [stock, expir, statistiques, produitsData, ventesGlobales, repartition] = await Promise.all([
-          produitService.alertesStock(),
-          produitService.bientotExpires(),
-          factureService.statistiques7Jours(),
-          produitService.getAll(),
-          factureService.totalVentes(),
-          factureService.ventesParProduit(),
-        ]);
+        const [stock, expir, statistiques, produitsData, repartition, jour] =
+          await Promise.all([
+            produitService.alertesStock(),
+            produitService.bientotExpires(),
+            factureService.statistiques7Jours(),
+            produitService.getAll(),
+            factureService.ventesParProduit(),
+            factureService.ventesDuJour(),
+          ]);
+
         setAlertesStock(stock);
         setBientotExpires(expir);
         setStats(
@@ -41,9 +43,11 @@ export default function Dashboard() {
             }),
           }))
         );
-        setTotalProduits(produitsData.count ?? (produitsData.results || produitsData).length);
-        setTotalVentes(ventesGlobales);
+        setTotalProduits(
+          produitsData.count ?? (produitsData.results || produitsData).length
+        );
         setVentesParProduit(repartition);
+        setVentesJour(jour.data ?? jour);
       } catch (err) {
         console.error(err);
       } finally {
@@ -74,11 +78,11 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-muted mb-0 small">Montant total des ventes</p>
-                  <h4 className="mb-0">{totalVentes.montant_total.toFixed(2)}</h4>
+                  <h4 className="mb-0">{Number(ventesJour.montant_total).toLocaleString("fr-FR")} Ar</h4>
                 </div>
               </div>
               <span className="text-success small">
-                <i className="bi bi-arrow-up me-1"></i>{totalVentes.nombre_factures} factures
+                <i className="bi bi-arrow-up me-1"></i>{ventesJour.nombre_factures} facture aujourd'hui
               </span>
             </div>
           </div>
@@ -110,7 +114,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-muted mb-0 small">Alertes de stock</p>
-                  <h4 className="mb-0">{alertesStock.length}</h4>
+                  <h4 className="mb-4">{alertesStock.length}</h4>
                 </div>
               </div>
               <span className="text-warning small">Produits sous le seuil</span>
@@ -127,7 +131,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-muted mb-0 small">Expirations proches</p>
-                  <h4 className="mb-0">{bientotExpires.length}</h4>
+                  <h4 className="mb-4">{bientotExpires.length}</h4>
                 </div>
               </div>
               <span className="text-danger small">Dans les 30 jours</span>

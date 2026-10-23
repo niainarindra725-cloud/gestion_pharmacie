@@ -207,9 +207,6 @@ export default function Ventes() {
         <div className="card-body">
           <div className="row g-2 align-items-end mb-3">
             <div className="col-md-8">
-              {/* <label className="form-label">
-                Client <span className="text-danger">*</span>
-              </label> */}
               <select className="form-select" value={client} onChange={(e) => setClient(e.target.value)}>
                 <option value="">-- Sélectionner un client --</option>
                 {clients.map((c) => (
